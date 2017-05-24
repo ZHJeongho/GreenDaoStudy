@@ -9,7 +9,7 @@ import org.greenrobot.greendao.annotation.Id;
  */
 @Entity
 public class DotaHero {
-    @Id
+    @Id(autoincrement = true)
     private long id;
 
     private String name;
@@ -19,6 +19,7 @@ public class DotaHero {
     private int mp;
 
     private int exp;
+
 
     @Generated(hash = 623523123)
     public DotaHero(long id, String name, int hp, int mp, int exp) {
@@ -31,6 +32,10 @@ public class DotaHero {
 
     @Generated(hash = 500107644)
     public DotaHero() {
+    }
+
+    public DotaHero(long id) {
+        this.id = id;
     }
 
     public long getId() {

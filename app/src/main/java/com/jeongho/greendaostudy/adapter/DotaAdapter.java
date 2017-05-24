@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.jeongho.greendaostudy.R;
 import com.jeongho.greendaostudy.dao.DotaHero;
 
@@ -36,11 +37,15 @@ public class DotaAdapter extends RecyclerView.Adapter<DotaAdapter.ViewHolder>{
 
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, int i) {
-        viewHolder.circleImageView.setImageResource(R.mipmap.ic_launcher_round);
+//        viewHolder.circleImageView.setImageResource(R.mipmap.ic_launcher_round);
+
+        Glide.with(viewHolder.itemView).load("https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1495535143307&di=df247d326c3b553121cc16d3c1b9555c&imgtype=0&src=http%3A%2F%2Fv1.qzone.cc%2Favatar%2F201403%2F02%2F13%2F31%2F5312c22b0e7d4289.jpg%2521200x200.jpg")
+                .into(viewHolder.circleImageView);
         viewHolder.nameTv.setText("" + mHeroes.get(i).getName());
-        viewHolder.hpTv.setText("" + mHeroes.get(i).getHp());
-        viewHolder.mpTv.setText("" + mHeroes.get(i).getMp());
-        viewHolder.expTv.setText("" + mHeroes.get(i).getExp());
+        viewHolder.hpTv.setText("HP:" + mHeroes.get(i).getHp());
+        viewHolder.mpTv.setText("MP:" + mHeroes.get(i).getMp());
+        viewHolder.expTv.setText("EXP" + mHeroes.get(i).getExp());
+        viewHolder.idTv.setText("" + mHeroes.get(i).getId());
     }
 
     @Override
@@ -52,11 +57,12 @@ public class DotaAdapter extends RecyclerView.Adapter<DotaAdapter.ViewHolder>{
 
         private CircleImageView circleImageView;
 
+        private TextView idTv;
+
         private TextView nameTv;
         private TextView hpTv;
         private TextView mpTv;
         private TextView expTv;
-
         public ViewHolder(View itemView) {
             super(itemView);
             circleImageView = (CircleImageView) itemView.findViewById(R.id.profile_image);
@@ -64,7 +70,23 @@ public class DotaAdapter extends RecyclerView.Adapter<DotaAdapter.ViewHolder>{
             hpTv = (TextView) itemView.findViewById(R.id.tv_hp);
             mpTv = (TextView) itemView.findViewById(R.id.tv_mp);
             expTv = (TextView) itemView.findViewById(R.id.tv_exp);
-
+            idTv = (TextView) itemView.findViewById(R.id.tv_id);
         }
+
+    }
+    public void addHero(DotaHero hero){
+        mHeroes.add(0, hero);
+        notifyItemInserted(0);
+    }
+
+    public void removeHero(int position){
+       // mHeroes.remove(position);
+        notifyItemRemoved(position);
+    }
+
+    public void addHeros(List<DotaHero> heroes) {
+        int startPosition = mHeroes.size();
+        mHeroes.addAll(heroes);
+        notifyItemRangeChanged(startPosition, heroes.size());
     }
 }

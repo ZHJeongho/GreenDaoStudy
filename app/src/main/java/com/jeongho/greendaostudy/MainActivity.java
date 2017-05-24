@@ -2,7 +2,9 @@ package com.jeongho.greendaostudy;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -19,6 +21,7 @@ import com.jeongho.greendaostudy.dao.DotaHeroDao;
 
 import org.greenrobot.greendao.query.QueryBuilder;
 
+import java.util.LinkedList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -32,18 +35,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private RecyclerView mRecyclerView;
 
+    private DotaAdapter mAdapter;
+
+    private List<DotaHero> mDotaHeroes;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         initView();
+        initData();
         initListener();
 
-        DaoSession daoSession = ((GreenApplication) getApplicationContext()).getDaoSession();
-        mDotaHeroDao = daoSession.getDotaHeroDao();
-
-        showAllHeros();
 
         List<DotaHero> heros = mDotaHeroDao.queryBuilder()
                 .where(DotaHeroDao.Properties.Hp.eq(60))
@@ -52,12 +55,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Toast.makeText(this, "血量等于60的英雄有：" + heros.size() + "个", Toast.LENGTH_SHORT).show();
     }
 
-    private void showAllHeros() {
-        mTextView.setText("");
+    private void initData() {
+        DaoSession daoSession = ((GreenApplication) getApplicationContext()).getDaoSession();
+        mDotaHeroDao = daoSession.getDotaHeroDao();
+//        mDotaHeroDao.deleteAll();
 
-        List<DotaHero> allHero = mDotaHeroDao.loadAll();
-        showHeros(allHero);
-
+        mDotaHeroes = mDotaHeroDao.loadAll();
+        mAdapter = new DotaAdapter(mDotaHeroes);
+        mRecyclerView.setAdapter(mAdapter);
     }
 
     private void initView() {
@@ -66,6 +71,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mDeleteBtn = (Button) findViewById(R.id.btn_delete);
         mUpdateBtn = (Button) findViewById(R.id.btn_update);
         mRecyclerView = (RecyclerView) findViewById(R.id.rv);
+        mRecyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+        mRecyclerView.setItemAnimator(new DefaultItemAnimator());
     }
 
     private void initListener() {
@@ -79,15 +86,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (view.getId()){
             case R.id.btn_add:
                 addHero();
-                showAllHeros();
                 break;
             case R.id.btn_delete:
-                deleteHero();
-                showAllHeros();
+                deleteHero(0);
                 break;
             case R.id.btn_update:
                 updateHero();
-                showAllHeros();
                 break;
         }
     }
@@ -96,49 +100,45 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    private void deleteHero() {
-        mDotaHeroDao.deleteByKey(mDotaHeroDao.count());
+    private void deleteHero(int position) {
+        mDotaHeroDao.deleteByKey(mDotaHeroes.get(position).getId());
+        mDotaHeroes.remove(position);
+        Toast.makeText(this, "" + mDotaHeroDao.count(), Toast.LENGTH_SHORT).show();
+        mAdapter.removeHero(position);
     }
 
     private void addHero() {
+        List<DotaHero> heroes = new LinkedList<>();
+        for (int i = 0; i < 20; i++){
+            String name = "Jugg";
+            int hp = (int) (Math.random() * 100);
+            int mp = (int) (Math.random() * 100);
+            int exp = (int) (Math.random() * 100) + 200;
 
-        DotaHero hero = new DotaHero();
-        hero.setId(mDotaHeroDao.count() + 1);
-        hero.setName("Jugg");
-        hero.setHp((int) (Math.random() * 100));
-        hero.setMp((int) (Math.random() * 100));
-        hero.setExp(200 + (int) (Math.random() * 100));
+            DotaHero hero = new DotaHero();
+            hero.setId(i);
+            hero.setName(name);
+            hero.setHp(hp);
+            hero.setMp(mp);
+            hero.setExp(exp);
 
-        mDotaHeroDao.insert(hero);
+            heroes.add(hero);
+        }
+        mDotaHeroDao.insertInTx(heroes);
+
+        mAdapter.addHeros(heroes);
     }
 
     private void orderAsc(){
         QueryBuilder<DotaHero> queryBuilder = mDotaHeroDao.queryBuilder().orderAsc(DotaHeroDao.Properties.Hp);
-        List<DotaHero> list = queryBuilder.list();
-        showHeros(list);
+        mDotaHeroes = queryBuilder.list();
+        mAdapter.notifyDataSetChanged();
     }
 
     private void orderDesc(){
         QueryBuilder<DotaHero> queryBuilder = mDotaHeroDao.queryBuilder().orderDesc(DotaHeroDao.Properties.Hp);
-        List<DotaHero> list = queryBuilder.list();
-        showHeros(list);
-    }
-
-    private void showHeros(List<DotaHero> list) {
-        mRecyclerView.setLayoutManager(new GridLayoutManager(this, 2));
-        DotaAdapter adapter = new DotaAdapter(list);
-        mRecyclerView.setAdapter(adapter);
-
-        mTextView.setText("");
-
-        mTextView.append("当前数据库中有" + list.size()+ "个英雄\r\n");
-        for (int i = 0; i < list.size(); i++){
-
-            DotaHero hero = list.get(i);
-
-            mTextView.append("ID: " + hero.getId() + "英雄名称：" + hero.getName() + "  HP:" + hero.getHp()
-                    + "   MP:" + hero.getMp() + "   EXP:" + hero.getExp() + "\r\n");
-        }
+        mDotaHeroes = queryBuilder.list();
+        mAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -155,6 +155,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.desc:
                 orderDesc();
+                break;
+            case R.id.linear_manager:
+                mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+                mAdapter.notifyDataSetChanged();
+                break;
+            case R.id.grid_manager:
+                mRecyclerView.setLayoutManager(new GridLayoutManager(this, 3));
+                mAdapter.notifyDataSetChanged();
                 break;
         }
         return true;
