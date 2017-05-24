@@ -5,4 +5,6 @@
     <string name="update">改</string>
     <string name="asc">顺序</string>
     <string name="desc">倒序</string>
+    <string name="linear_manager">Linear</string>
+    <string name="grid_manager">Grid</string>
 </resources>

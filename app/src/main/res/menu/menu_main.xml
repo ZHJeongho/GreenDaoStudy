@@ -9,4 +9,12 @@
         android:id="@+id/desc"
         android:title="@string/desc"
         app:showAsAction="never"/>
+    <item
+        android:id="@+id/linear_manager"
+        android:title="@string/linear_manager"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/grid_manager"
+        android:title="@string/grid_manager"
+        app:showAsAction="never"/>
 </menu>
